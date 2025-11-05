@@ -11,6 +11,10 @@ use instructions::*;
 pub mod capstone_harshit {
     use super::*;
 
+    pub fn initialize_treasury(ctx: Context<InitializeTreasury>) -> Result<()> {
+        instructions::initialize_treasury::handler(ctx)
+    }   
+
     pub fn initialize(ctx: Context<InitializePool>) -> Result<()> {
         instructions::initialize::handler(ctx)
     }

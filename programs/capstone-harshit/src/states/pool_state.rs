@@ -2,7 +2,7 @@ use anchor_lang::prelude::*;
 
 #[account]
 #[derive(InitSpace)]
-pub struct PoolState {
+pub struct PoolState { 
   pub owner : Pubkey ,
   pub collateral_mint : Pubkey ,
   pub collateral_amount : u64 ,
