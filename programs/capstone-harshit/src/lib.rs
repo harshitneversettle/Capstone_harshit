@@ -1,19 +1,21 @@
 use anchor_lang::prelude::*;
 
-pub mod states;
+declare_id!("AKrXLPmj1tW9AzG8EhkmQ7zt2t8FFTVXxsWGjgzrWifg");
+
 pub mod instructions;
+pub mod states;
 
 use instructions::*;
-declare_id!("AKrXLPmj1tW9AzG8EhkmQ7zt2t8FFTVXxsWGjgzrWifg");
 
 #[program]
 pub mod capstone_harshit {
     use super::*;
 
-    pub fn initialize_pool(ctx: Context<InitializePool>) -> Result<()> {
-        initialize_pool(ctx)
+    pub fn initialize(ctx: Context<InitializePool>) -> Result<()> {
+        instructions::initialize::handler(ctx)
+    }
+
+    pub fn deposit(ctx: Context<DepositCollateral>, amount: u64) -> Result<()> {
+        instructions::deposit_collateral::handler(ctx, amount)
     }
 }
-
-#[derive(Accounts)]
-pub struct Initialize {}
