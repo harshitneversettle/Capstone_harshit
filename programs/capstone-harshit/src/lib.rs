@@ -1,6 +1,6 @@
 use anchor_lang::prelude::*;
 
-declare_id!("AKrXLPmj1tW9AzG8EhkmQ7zt2t8FFTVXxsWGjgzrWifg");
+declare_id!("AP9YXCBDLFuZkgrE44UgyJSbjvCJCvPdjxfwnLJch66e");
 
 pub mod instructions;
 pub mod states;
@@ -13,7 +13,11 @@ pub mod capstone_harshit {
 
     pub fn initialize_treasury(ctx: Context<InitializeTreasury>) -> Result<()> {
         instructions::initialize_treasury::handler(ctx)
-    }   
+    }  
+
+    pub fn deposit_treasury(ctx: Context<UserDeposit>, amount: u64) -> Result<()> {
+        instructions::user_treasury::handler(ctx, amount)
+    }
 
     pub fn initialize(ctx: Context<InitializePool>) -> Result<()> {
         instructions::initialize::handler(ctx)

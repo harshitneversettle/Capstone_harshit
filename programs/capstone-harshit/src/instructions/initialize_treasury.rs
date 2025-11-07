@@ -48,6 +48,6 @@ pub fn handler(ctx : Context<InitializeTreasury>)->Result<()>{
     treasury.bump = ctx.bumps.treasury_state ;
     treasury.treasury_ata = ctx.accounts.treasury_vault.key() ;
 
-    msg!("✅ Treasury initialized successfully ✅");
+    msg!("Treasury initialized successfully ");
     Ok(())
 }

@@ -1,7 +1,7 @@
 import * as anchor from "@coral-xyz/anchor";
 import { Program } from "@coral-xyz/anchor";
 import { CapstoneHarshit } from "../target/types/capstone_harshit";
-import { PublicKey, SystemProgram } from "@solana/web3.js";
+import { PublicKey, SystemProgram, Keypair } from "@solana/web3.js";
 import {
   createMint,
   createAssociatedTokenAccount,
@@ -11,130 +11,195 @@ import {
   TOKEN_PROGRAM_ID,
   ASSOCIATED_TOKEN_PROGRAM_ID,
 } from "@solana/spl-token";
+import fs from "fs";
 import { expect } from "chai";
 
-describe("Initialize + Deposit Test", () => {
-  const provider = anchor.AnchorProvider.env();
+// ============================================================
+// 🔑 Load Local Hardcoded Wallets
+// ============================================================
+const HARSHIT_KEYPAIR = Keypair.fromSecretKey(
+  Uint8Array.from(JSON.parse(fs.readFileSync("/home/titan/capstone-harshit/harshit.json", "utf-8")))
+);
+
+const ANVESHA_KEYPAIR = Keypair.fromSecretKey(
+  Uint8Array.from(JSON.parse(fs.readFileSync("/home/titan/capstone-harshit/anvesha.json", "utf-8")))
+);
+
+console.log("👤 Harshit (Owner):", HARSHIT_KEYPAIR.publicKey.toBase58());
+console.log("👩‍💼 Anvesha (Depositor):", ANVESHA_KEYPAIR.publicKey.toBase58());
+
+// ============================================================
+// 🧪 Test Suite
+// ============================================================
+describe("Initialize Treasury (Owner = Harshit) + Deposit (Anvesha)", () => {
+  const connection = new anchor.web3.Connection("http://127.0.0.1:8899", "confirmed");
+
+  // Harshit is the provider (owner)
+  const provider = new anchor.AnchorProvider(connection, new anchor.Wallet(HARSHIT_KEYPAIR), {});
   anchor.setProvider(provider);
 
   const program = anchor.workspace.CapstoneHarshit as Program<CapstoneHarshit>;
-  const owner = provider.wallet as anchor.Wallet;
 
-  let collateralMint: PublicKey;
-  let loanMint: PublicKey;
-  let userAta: PublicKey;
-  let vaultAta: PublicKey;
-  let poolPda: PublicKey;
-  let bump: number;
+  let liquidityMint: PublicKey;
+  let treasuryStatePda: PublicKey;
+  let treasuryVaultAta: PublicKey;
+  let treasuryBump: number;
 
-  const depositAmount = 500_000; // 0.5 USDC
+  const anveshaDeposit = 2 * 10 ** 9; // 2 tokens (9 decimals)
 
-  it("✅ Initialize Pool", async () => {
-    console.log("\n🚀 Pool Initialization\n");
+  // ============================================================
+  // 🌞 Step 0: Fund both wallets
+  // ============================================================
+  before(async () => {
+    console.log("\n💧 Airdropping SOL to wallets...\n");
 
-    collateralMint = await createMint(
-      provider.connection,
-      owner.payer,
-      owner.publicKey,
-      owner.publicKey,
-      6
-    );
+    await connection.requestAirdrop(HARSHIT_KEYPAIR.publicKey, 5 * anchor.web3.LAMPORTS_PER_SOL);
+    await connection.requestAirdrop(ANVESHA_KEYPAIR.publicKey, 5 * anchor.web3.LAMPORTS_PER_SOL);
 
-    loanMint = await createMint(
-      provider.connection,
-      owner.payer,
-      owner.publicKey,
-      owner.publicKey,
+    // Wait to confirm airdrop
+    await new Promise((r) => setTimeout(r, 3000));
+
+    const harshitBal = await connection.getBalance(HARSHIT_KEYPAIR.publicKey);
+    const anveshaBal = await connection.getBalance(ANVESHA_KEYPAIR.publicKey);
+
+    console.log("✅ Harshit SOL Balance:", harshitBal / 1e9);
+    console.log("✅ Anvesha SOL Balance:", anveshaBal / 1e9);
+  });
+
+  // ============================================================
+  // ✅ Step 1: Initialize Treasury (Owner = Harshit)
+  // ============================================================
+  it("✅ Initializes the Treasury (by Harshit)", async () => {
+    console.log("\n🚀 Initializing Treasury by Harshit\n");
+
+    // 🪙 Create Mock Liquidity Token Mint
+    liquidityMint = await createMint(
+      connection,
+      HARSHIT_KEYPAIR,
+      HARSHIT_KEYPAIR.publicKey,
+      HARSHIT_KEYPAIR.publicKey,
       9
     );
 
-    // Create User ATA and Mint Tokens 🪙
-    userAta = await createAssociatedTokenAccount(
-      provider.connection,
-      owner.payer,
-      collateralMint,
-      owner.publicKey
-    );
-
-    await mintTo(
-      provider.connection,
-      owner.payer,
-      collateralMint,
-      userAta,
-      owner.publicKey,
-      depositAmount * 10
-    );
-
-    [poolPda, bump] = PublicKey.findProgramAddressSync(
-      [Buffer.from("user-pool"), owner.publicKey.toBuffer()],
+    // 🏦 Derive Treasury PDA
+    [treasuryStatePda, treasuryBump] = PublicKey.findProgramAddressSync(
+      [Buffer.from("treasury")],
       program.programId
     );
 
+    // 💰 Treasury vault ATA (owned by Treasury PDA)
+    treasuryVaultAta = getAssociatedTokenAddressSync(
+      liquidityMint,
+      treasuryStatePda,
+      true
+    );
+
+    console.log("🪙 Liquidity Mint:", liquidityMint.toBase58());
+    console.log("🏦 Treasury PDA:", treasuryStatePda.toBase58());
+    console.log("💰 Treasury Vault ATA:", treasuryVaultAta.toBase58());
+
+    // 🧾 Initialize Treasury
     await program.methods
-      .initialize()
+      .initializeTreasury()
       .accounts({
-        poolState: poolPda,
-        owner: owner.publicKey,
-        collateralMint,
-        loanMint,
+        treasuryState: treasuryStatePda,
+        owner: HARSHIT_KEYPAIR.publicKey,
+        treasuryVault: treasuryVaultAta,
+        liquidityMint,
         systemProgram: SystemProgram.programId,
+        associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
+        tokenProgram: TOKEN_PROGRAM_ID,
       })
+      .signers([HARSHIT_KEYPAIR])
       .rpc();
+
+    const treasury = await program.account.treasuryState.fetch(treasuryStatePda);
+
+    console.log("\n📊 Treasury Initialized:");
+    console.log("-----------------------------");
+    console.log("🏦 Treasury PDA:", treasuryStatePda.toBase58());
+    console.log("💰 Vault ATA:", treasury.treasuryAta.toBase58());
+    console.log("💧 Liquidity:", treasury.totalLiquidity.toNumber());
+    console.log("📉 Borrowed:", treasury.totalBorrowed.toNumber());
+    console.log("-----------------------------\n");
+
+    expect(treasury.totalLiquidity.toNumber()).to.equal(0);
+    console.log("✅ Treasury Initialization Test Passed ✅\n");
   });
 
-  it("✅ Deposit Collateral", async () => {
-  console.log("\n💰 Running Deposit Test\n");
+  // ============================================================
+  // ✅ Step 2: Anvesha deposits into Treasury
+  // ============================================================
+  it("💰 Anvesha Deposits Liquidity", async () => {
+    const treasuryBefore = await program.account.treasuryState.fetch(treasuryStatePda);
+    console.log("\n💧 Treasury Liquidity Before:", treasuryBefore.totalLiquidity.toNumber());
 
-  const [vaultAuthorityPda] = PublicKey.findProgramAddressSync(
-    [Buffer.from("vault"), poolPda.toBuffer()],
-    program.programId
-  );
+    // 👩‍💼 Create Anvesha's Token Account (payer = Harshit)
+    const anveshaAta = await createAssociatedTokenAccount(
+      connection,
+      HARSHIT_KEYPAIR,
+      liquidityMint,
+      ANVESHA_KEYPAIR.publicKey
+    );
 
-  vaultAta = getAssociatedTokenAddressSync(
-    collateralMint,
-    vaultAuthorityPda,
-    true
-  );
+    // Mint tokens to Anvesha's ATA
+    await mintTo(
+      connection,
+      HARSHIT_KEYPAIR,
+      liquidityMint,
+      anveshaAta,
+      HARSHIT_KEYPAIR.publicKey,
+      anveshaDeposit
+    );
 
-  console.log("🏦 Vault ATA:", vaultAta.toBase58());
-  console.log("🔐 Vault Authority PDA:", vaultAuthorityPda.toBase58());
+    const balanceBefore = await getAccount(connection, anveshaAta);
+    console.log(`💸 Minted ${Number(balanceBefore.amount) / 1e9} tokens to Anvesha`);
 
-  await program.methods
-    .deposit(new anchor.BN(depositAmount))
-    .accounts({
-      poolState: poolPda,
-      vaultAuthority: vaultAuthorityPda,
-      collateralMint,
-      vaultAta,
-      userAta,
-      owner: owner.publicKey,
-      tokenProgram: TOKEN_PROGRAM_ID,
-      associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
-      systemProgram: SystemProgram.programId,
-      rent: anchor.web3.SYSVAR_RENT_PUBKEY,
-    })
-    .rpc();
+    const [userTreasuryPda] = PublicKey.findProgramAddressSync(
+      [Buffer.from("user-deposit"), ANVESHA_KEYPAIR.publicKey.toBuffer()],
+      program.programId
+    );
 
-  // ✅ Balance Check
-  const vaultAcc = await getAccount(provider.connection, vaultAta);
+    console.log("\n👩‍💼 Anvesha depositing to Treasury...\n");
 
-  const poolState = await program.account.poolState.fetch(poolPda);
+    const tx = await program.methods
+      .depositTreasury(new anchor.BN(anveshaDeposit))
+      .accounts({
+        treasuryState: treasuryStatePda,
+        userTreasury: userTreasuryPda,
+        user: ANVESHA_KEYPAIR.publicKey,
+        userAta: anveshaAta,
+        liquidityMint,
+        treasuryAta: treasuryVaultAta,
+        systemProgram: SystemProgram.programId,
+        tokenProgram: TOKEN_PROGRAM_ID,
+        owner: HARSHIT_KEYPAIR.publicKey,
+      })
+      .signers([ANVESHA_KEYPAIR])
+      .rpc();
 
-  console.log("\n📊 Deposit State Update:");
-  console.log("---------------------------");
-  console.log("📍 Pool PDA:           ", poolPda.toBase58());
-  console.log("🏦 Vault ATA Balance:  ", Number(vaultAcc.amount));
-  console.log("🪙 Collateral Amount:  ", poolState.collateralAmount.toNumber());
-  console.log("👤 Owner:              ", poolState.owner.toBase58());
-  console.log("🪙 Collateral Mint:    ", poolState.collateralMint.toBase58());
-  console.log("Bump:                  ", poolState.bump);
-  console.log("---------------------------\n");
+    console.log("✅ Transaction Signature:", tx);
 
-  // ✅ Assertions
-  expect(Number(vaultAcc.amount)).to.equal(depositAmount);
-  expect(poolState.collateralAmount.toNumber()).to.equal(depositAmount);
+    const treasuryAfter = await program.account.treasuryState.fetch(treasuryStatePda);
+    const vaultAccount = await getAccount(connection, treasuryVaultAta);
+    const userTreasuryAccount = await program.account.userTreasury.fetch(userTreasuryPda);
 
-  console.log("✅ Deposit Collateral Test ✅\n");
-});
+    console.log("\n📊 Treasury State After Deposit:");
+    console.log("-----------------------------");
+    console.log("💧 Before Liquidity:", treasuryBefore.totalLiquidity.toNumber() / 1e9);
+    console.log("💰 After Liquidity:", treasuryAfter.totalLiquidity.toNumber() / 1e9);
+    console.log("🏦 Vault Balance:", Number(vaultAccount.amount) / 1e9);
+    console.log("-----------------------------");
 
+    console.log("\n📝 User Treasury Record:");
+    console.log("👤 User:", userTreasuryAccount.user.toBase58());
+    console.log("💰 Deposit Amount:", userTreasuryAccount.depositAmount.toNumber() / 1e9);
+    console.log("⏰ Deposit Time:", new Date(userTreasuryAccount.depositTime.toNumber() * 1000).toLocaleString());
+    console.log("-----------------------------");
+
+    expect(treasuryAfter.totalLiquidity.toNumber()).to.equal(
+      treasuryBefore.totalLiquidity.toNumber() + anveshaDeposit
+    );
+    console.log("\n✅ Anvesha Deposit Test Passed ✅\n");
+  });
 });
