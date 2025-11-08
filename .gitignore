@@ -6,5 +6,9 @@ node_modules
 test-ledger
 .yarn
 capstone-harshit.ts
-*.json
 
+capstone-harshit.ts
+wallet.json
+harshit.json
+wallet.jsonharshit.json
+wallet.json
