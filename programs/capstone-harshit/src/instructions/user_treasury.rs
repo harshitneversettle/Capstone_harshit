@@ -12,14 +12,13 @@ pub struct UserDeposit<'info>{
    #[account(
         mut,
         has_one = liquidity_mint,
-        has_one = treasury_ata,
         seeds = [b"treasury"],
         bump = treasury_state.bump
     )]
     pub treasury_state : Account<'info , TreasuryState> ,
 
     #[account(
-        init , 
+        init_if_needed,
         payer = user ,
         space = 8 + UserTreasury::INIT_SPACE,
         seeds = [b"user-deposit" , user.key().as_ref()] ,
@@ -41,8 +40,8 @@ pub struct UserDeposit<'info>{
     pub user_ata: Account<'info, TokenAccount>,
 
     
-    #[account(mut)]
-    pub liquidity_mint : Account<'info , Mint> , 
+    /// CHECK: WSOL native mint (do NOT deserialize as Mint!)
+    pub liquidity_mint: UncheckedAccount<'info>,
 
     #[account(mut)]
     pub treasury_ata : Account<'info , TokenAccount> ,

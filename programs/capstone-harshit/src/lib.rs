@@ -1,6 +1,6 @@
 use anchor_lang::prelude::*;
 
-declare_id!("AP9YXCBDLFuZkgrE44UgyJSbjvCJCvPdjxfwnLJch66e");
+declare_id!("EKAaTiK6Fg19wAy9FGXTC171ZtkPCdiK7zrfQ47px5Cf");
 
 pub mod instructions;
 pub mod states;
@@ -9,6 +9,8 @@ use instructions::*;
 
 #[program]
 pub mod capstone_harshit {
+    use anchor_lang::context;
+
     use super::*;
 
     pub fn initialize_treasury(ctx: Context<InitializeTreasury>) -> Result<()> {
@@ -25,5 +27,9 @@ pub mod capstone_harshit {
 
     pub fn deposit(ctx: Context<DepositCollateral>, amount: u64) -> Result<()> {
         instructions::deposit_collateral::handler(ctx, amount)
+    }
+
+    pub fn borrow(ctx : Context<BorrowLoan>)->Result<()>{
+        instructions::borrow::handler(ctx)
     }
 }

@@ -24,19 +24,19 @@ pub struct InitializeTreasury<'info> {
 
 
     #[account(
-        init_if_needed , 
-        payer = owner , 
+        mut ,
         associated_token::mint = liquidity_mint ,
         associated_token::authority = treasury_state 
     )]
     pub treasury_vault : Account<'info , TokenAccount> ,     // ATA for treasurypda 
 
-    pub liquidity_mint : Account<'info , Mint> ,
+    /// CHECK: WSOL native mint (do NOT deserialize as Mint!)
+    pub liquidity_mint: UncheckedAccount<'info>,
     pub system_program: Program<'info, System>,
     pub associated_token_program: Program<'info, AssociatedToken>,
     pub token_program: Program<'info, Token>,
 }
-
+    
 
 pub fn handler(ctx : Context<InitializeTreasury>)->Result<()>{
     let treasury = &mut ctx.accounts.treasury_state ;
