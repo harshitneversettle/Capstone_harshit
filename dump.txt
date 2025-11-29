@@ -1,0 +1,33 @@
+yarn run v1.22.22
+$ /home/titan/Desktop/capstone-harshit/node_modules/.bin/ts-mocha -p ./tsconfig.json -t 1000000 'tests/**/*.ts'
+Loaded Harshit wallet: 8rH2Ry6FemTELsouLXAwSRbckSsGuPaNVwohHvREwXmi
+Loaded Test wallet: 9iV2QXoXHxEFsed2MVJed3RyHeZfP9ha2FBF4hZEe7Uh
+
+
+Initialize Treasury
+Treasury PDA: HL5Ph1YrtFZMdquuGPgiNkTNJ7HRrw9T89WeoimiPLhf
+Treasury vault pubkey: FZS6ELxJwjfhCNWfPAPgwj7PjarncdAkST8mYcs8czkG
+Treasury initialized successfully.
+Liquidity Mint: So11111111111111111111111111111111111111112
+Treasury Vault ATA: FZS6ELxJwjfhCNWfPAPgwj7PjarncdAkST8mYcs8czkG
+
+
+-------------------------------------------------------------------------------------------------------------------------------------------
+
+-------------------------------------------------
+Depositing 10 SOL from test wallet to Treasury
+-------------------------------------------------
+User WSOL balance before wrapping: 0
+Successfully wrapped 10 SOL into WSOL
+User WSOL balance after wrapping: 10
+-------------------------------------------------
+Treasury state after deposit:
+Liquidity Mint: So11111111111111111111111111111111111111112
+Treasury Vault ATA: FZS6ELxJwjfhCNWfPAPgwj7PjarncdAkST8mYcs8czkG
+Total Liquidity: 10
+Total Borrowed: 0
+-------------------------------------------------
+    ✔ Liquidator adding liquidity  (730ms)
+
+
+

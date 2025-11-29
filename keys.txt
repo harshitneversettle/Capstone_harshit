@@ -1,0 +1,6 @@
+solana airdrop 1000 9iV2QXoXHxEFsed2MVJed3RyHeZfP9ha2FBF4hZEe7Uh
+solana airdrop 1000 8rH2Ry6FemTELsouLXAwSRbckSsGuPaNVwohHvREwXmi
+
+
+spl-token create-account 3LktYvnLKFFS9rjdG3qDRB4fV9sJFooRkKxVcJK7GFLg --owner FRUSb9M6YwKtWEVnqy83smBWbhGccbw14HmN83XDz6Bm \
+  --fee-payer /home/titan/Desktop/capstone-harshit/harshit.json

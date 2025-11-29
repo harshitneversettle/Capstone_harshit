@@ -1,0 +1,86 @@
+# -----------------------------
+# Node / JS / TS
+# -----------------------------
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+*.tsbuildinfo
+
+# Build outputs (frontend / tools)
+dist/
+build/
+.cache/
+.eslintcache
+
+# -----------------------------
+# Rust / Anchor / Solana
+# -----------------------------
+# Anchor workspace data
+.anchor/
+
+# Rust build artifacts
+target/
+**/*.rs.bk
+
+# Local validator / ledger data
+test-ledger/
+.test-ledger/
+ledger/
+validator-ledger/
+
+# IDLs (if generated and not hand-edited)
+*.json.idl
+
+# -----------------------------
+# Frontend apps
+# -----------------------------
+app/node_modules/
+app/.next/
+app/out/
+app/dist/
+app/build/
+
+defi-ui/node_modules/
+defi-ui/.next/
+defi-ui/out/
+defi-ui/dist/
+defi-ui/build/
+
+# -----------------------------
+# Keys / sensitive JSON
+# -----------------------------
+harshit.json
+Test.json
+admin-wallet.json
+my_program_id.json
+
+# If you have any other keypair / wallet files:
+*keypair.json
+*.key.json
+
+# -----------------------------
+# Logs / dumps / temp
+# -----------------------------
+*.log
+*.tmp
+*.swp
+*.swo
+dump.txt
+commands.txt
+keys.txt
+
+# -----------------------------
+# Editor / OS
+# -----------------------------
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+target/
+test-ledger/
+target/
+test-ledger/
+node_modules/
+.anchor/

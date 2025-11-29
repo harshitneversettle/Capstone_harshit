@@ -1,0 +1,17 @@
+solana config set --keypair /home/titan/Desktop/capstone-harshit/admin-wallet.json
+solana config set --url localhost
+solana airdrop 1000 5oi32hATNHnuvYqByBi1TEkicktPWd3d1wbw69BQ2RDk
+
+spl-token wrap 500
+
+
+
+
+// pool 
+spl-token create-token --decimals 6
+spl-token create-account C5uiAPr145fBWSgR8MG3YgmotdwAcoZnjYHr5hu6t9GS \
+  --owner FRUSb9M6YwKtWEVnqy83smBWbhGccbw14HmN83XDz6Bm \
+  --fee-payer /home/titan/Desktop/capstone-harshit/harshit.json
+
+
+spl-token mint C5uiAPr145fBWSgR8MG3YgmotdwAcoZnjYHr5hu6t9GS 500 --recipient-owner FRUSb9M6YwKtWEVnqy83smBWbhGccbw14HmN83XDz6Bm
