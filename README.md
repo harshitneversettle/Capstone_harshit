@@ -59,6 +59,8 @@ This structure guarantees organized tracking, prevents duplicate entries, and ma
 
 <details>
 <summary>Initialize pool</summary>
+
+  
 This instruction is basically responsible for setting up all the core information related to a user’s loan. It defines who is taking the loan and creates a personal pool for them using a PDA derived from the user’s public key, which ensures that each user can only have one pool.
 
 This pool holds all the important loan details, such as the token being used as collateral, the token being borrowed, how much collateral the user has deposited, and how much loan they are eligible to receive (which will be calculated based on that collateral). It also stores the vault ATA where the collateral is kept, along with the bump value so the PDA can always be safely re-derived.
@@ -164,7 +166,7 @@ Supported wallets include Phantom, Solflare, and Backpack, ensuring accessibilit
 
 * Blockchain: Solana (Devnet and Mainnet)
 * Smart Contracts: Rust + Anchor
-* Frontend: React + TypeScript
+* Frontend: Future scope    
 * Wallets: Phantom, Solflare, Backpack
 * Oracles: Pyth / Switchboard (Optional)
 * Development Tools: Solana CLI, Anchor CLI, GitHub Actions
@@ -251,6 +253,3 @@ This project is developed strictly for academic and research purposes under inst
 
 For issues, suggestions, or contributions, feel free to open an issue or submit a pull request. Your feedback is always welcome.
 
-
-
-this is the comlete readmne , structrue it such that it will become eye catching , dnt use emojis , just work of art , made it humanize 
