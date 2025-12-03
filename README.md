@@ -1,3 +1,4 @@
+
 # SolEase – Simplifying lending and borrowing on Solana.
 
 A secure, transparent, and user-friendly decentralized finance (DeFi) protocol built on the Solana blockchain for seamless lending and borrowing of digital assets.
@@ -15,10 +16,7 @@ The following documents and diagrams were **created specifically for this projec
 ---
 
 ## Overview
-
-The Decentralized Lend and Borrow System allows users to lend their crypto assets to earn interest or borrow liquidity by providing collateral, all without traditional financial intermediaries. The system leverages Solana's high-speed and low-cost infrastructure along with smart contracts built using the Anchor framework to ensure automation, transparency, and security.
-
-Users interact with the platform through an intuitive web interface connected to their wallets, allowing them to manage deposits, loans, and repayments efficiently.
+The decentralized lend-and-borrow protocol lets users supply liquidity to earn interest or borrow assets against collateral without traditional intermediaries. It is built on Solana with the Anchor framework, keeping all lending, borrowing, and accounting logic on-chain. Users interact by calling program instructions (via CLI or clients) to initialize the treasury, deposit liquidity, open a loan, repay, and withdraw funds. A utilization-aware rate model is used: below 80% treasury utilization the interest rate is 5%, and at or above 80% it jumps to 25%, incentivizing timely repayment and protecting the pool.
 
 ---
 
@@ -26,16 +24,8 @@ Users interact with the platform through an intuitive web interface connected to
 ## Instructions 
 <details>
 <summary>Initialize Treasury</summary>
-
-
-Basically, the protocol maintains one main treasury that acts as a shared liquidity pool for the whole system.  
-Liquidity providers (liquidators) deposit their funds into this treasury, and the protocol uses this pooled liquidity to fund loans for borrowers.
-
-In return, the liquidators earn royalty / interest on their provided amount.  
-This is calculated based on how much they deposit and how long their funds remain locked in the treasury.
-
-So, the larger the deposit and the longer the duration, the higher the returns they receive.
-
+  
+This instruction initializes the main treasury PDA that acts as the shared liquidity pool for the protocol. Liquidity providers deposit into this treasury, and the pooled funds are used to issue loans to borrowers. The treasury state tracks values such as total liquidity and total borrowed amount, and is referenced by subsequent instructions for borrowing, repayment, and liquidity withdrawal.
 
 <img width="1093" height="206" alt="image" src="https://github.com/user-attachments/assets/8e391121-a9b9-4b20-9190-620a28cdca91" />
 
@@ -44,13 +34,9 @@ So, the larger the deposit and the longer the duration, the higher the returns t
 
 <details>
 <summary>User Treasury</summary>
-The liquidators (users) will provide liquidity to the treasury, and a PDA will be derived using the seeds: user_pubkey + "treasury".  
-This ensures that each user has only one unique PDA per treasury.
+Liquidity providers deposit funds into the main treasury, and a per-user PDA is derived with seeds like user_pubkey + "treasury". This PDA acts as the user’s liquidity record, storing details such as the token mint, deposited amount, deposit timestamp, and the treasury ATA where funds are held. The structure enforces a single, unique record per user and treasury, enabling organized tracking and preventing duplicate entries. It provides a secure, transparent view of each user’s contribution to the shared liquidity pool.
 
-This PDA will act as the user’s liquidation record and will store all relevant information, such as which token is being used, the amount deposited, the timestamp of the deposit, and the destination account where the liquidity is stored (in this cse it is treasury_ATA) .  
-
-This structure guarantees organized tracking, prevents duplicate entries, and maintains a secure and transparent record of each user’s contribution to the treasury.
-
+  
 <img width="1036" height="360" alt="image" src="https://github.com/user-attachments/assets/4b6bbd0b-8692-43f2-9a70-d4cb37933c6d" />
 
 
@@ -61,12 +47,7 @@ This structure guarantees organized tracking, prevents duplicate entries, and ma
 <summary>Initialize pool</summary>
 
   
-This instruction is basically responsible for setting up all the core information related to a user’s loan. It defines who is taking the loan and creates a personal pool for them using a PDA derived from the user’s public key, which ensures that each user can only have one pool.
-
-This pool holds all the important loan details, such as the token being used as collateral, the token being borrowed, how much collateral the user has deposited, and how much loan they are eligible to receive (which will be calculated based on that collateral). It also stores the vault ATA where the collateral is kept, along with the bump value so the PDA can always be safely re-derived.
-
-Overall, this instruction just sets up the foundation for the user’s loan , keeping everything linked and organised so future actions like borrowing, repayment, or liquidation can work smoothly.
-
+This instruction initializes a per-user loan pool PDA that stores all core details for a borrower’s position. It identifies the borrower, derives a unique pool address from the user’s public key, and guarantees only one pool per user. The pool records the collateral mint, borrow mint, deposited collateral amount, and the maximum borrowable amount computed from that collateral. It also stores the vault ATA where collateral is locked and the bump needed to safely re-derive the PDA. This setup forms the foundation for later actions like borrowing, repayment, and potential liquidation.
 
 <img width="1136" height="428" alt="image" src="https://github.com/user-attachments/assets/df7e0768-8ded-4f09-bf52-735eb404e60f" />
 
@@ -75,12 +56,7 @@ Overall, this instruction just sets up the foundation for the user’s loan , ke
 
 <details>
 <summary>Deposit collateral</summary>
-This instruction is triggered when a user wants to deposit collateral for their loan. It first makes sure everything is correct (right mint, correct pool, proper accounts), and then moves the tokens from the user’s token account to the vault token account that belongs to the pool (user_ata -> vault_ata).
-
-The transfer is authorised by the user and done through a CPI call to the token program, so the protocol itself never directly touches the user’s funds. Once the transfer is successful, the amount is added to the pool’s collateral_amount (i.e. the pool state is updated ) , and the tokens stay locked inside the vault ATA as the user’s collateral.
-
-This instruction takes care of safely moving the user’s tokens into the vault and updating the pool state to reflect the new collateral balance.
-
+This instruction is called when a borrower deposits collateral into the loan vault. It validates that the correct pool, mint, and token accounts are provided, then transfers tokens from the user’s token account to the pool’s vault token account. The transfer is authorized by the user and executed via a CPI to the token program, so the program never directly holds user keys or funds. After a successful transfer, the pool’s collateral_amount field is updated and the tokens remain locked in the vault as collateral backing the loan.
 
 <img width="1140" height="374" alt="image" src="https://github.com/user-attachments/assets/bafc9486-d718-4b37-9ee8-bb4d572ccbae" />
 
@@ -88,11 +64,7 @@ This instruction takes care of safely moving the user’s tokens into the vault 
 
 <details>
 <summary>Borrow loan</summary>
-This instruction is called right after the user has deposited their collateral. At this stage, the protocol calculates how much loan the user is eligible to receive based on the collateral they’ve provided. Once the amount is determined, the funds are transferred from the treasury’s token account to the user’s token account (treasury_ata -> user_ata) .
-
-The transfer is authorised by the treasury PDA, which signs the transaction using its seeds, ensuring that only the protocol can move funds out of the treasury. This is done through a CPI call to the token program, so the process remains secure and fully controlled by the on-chain logic.
-
-After the transfer is completed, the treasury state is updated by reducing the total available liquidity and increasing the total borrowed amount. This keeps the treasury’s accounting in sync with the active loans. accordingly the Pool State is also updated .
+This instruction is invoked after collateral has been deposited and determines the borrower’s loan amount based on the recorded collateral and risk parameters. It then transfers tokens from the treasury’s token account to the borrower’s token account, authorized by the treasury PDA so only the program can move treasury funds. The transfer is executed via a CPI to the token program, keeping the flow secure and fully on-chain. Afterward, the treasury state reduces available liquidity, increases total borrowed, and the pool state is updated to reflect the new active loan.
 
 
 <img width="1174" height="350" alt="image" src="https://github.com/user-attachments/assets/9a859393-95c8-4f1b-a8bf-d8ebc14855bb" />
@@ -101,9 +73,7 @@ After the transfer is completed, the treasury state is updated by reducing the t
 
 <details>
 <summary>Repay loan</summary>
-This instruction is called when the user repays their loan after the borrowing period. At this stage, the protocol calculates accrued interest based on borrow_amount, interest_rate, and time elapsed (current_time - borrow_time) using the simple interest formula. Funds are transferred from user's token account (user_ata) to treasury's token account (treasury_ata) via CPI to token program, authorized by the user signer.
-
-After transfer completion, pool state clears loan_amount, borrow_amount, and borrow_time to zero, while treasury state increases total_liquidity by principal + interest and decreases total_borrowed by principal amount. This maintains accurate protocol accounting and releases the user's collateral lock.
+This instruction settles a borrower’s debt and releases collateral. It computes simple interest from principal, rate, and elapsed time, then transfers the repay amount from the user’s token account to the treasury via a CPI authorized by the user. After a successful transfer, the pool state clears loan-specific fields (loan_amount, borrow_amount, borrow_time) and the treasury increases total_liquidity by principal + interest while reducing total_borrowed by the principal. This keeps accounting accurate and unlocks the borrower’s collateral for withdrawal.
 
 <img width="1495" height="437" alt="image" src="https://github.com/user-attachments/assets/7b2e7a93-0eb9-44b4-9fbb-59d51ba4168f" />
 
@@ -113,10 +83,11 @@ After transfer completion, pool state clears loan_amount, borrow_amount, and bor
 
 <details>
 <summary>LP State initialization</summary>
-The LP state initialization instruction creates a dedicated LiquidatorState PDA for each liquidity provider using their wallet address as a seed. It also initializes the LP’s associated token account for the chosen liquidity mint and stores references to this ATA, the mint, and the relevant treasury authority bump.
-All numeric fields such as deposited amount, current liquidity, and timestamps are set to zero, so the protocol has a clean starting record from which it can track each LP’s future deposits and withdrawals.
+The LP state initialization instruction creates a dedicated LiquidatorState PDA for each liquidity provider, using the provider’s wallet address as a seed. It also initializes the provider’s associated token account for the chosen liquidity mint and stores references to this ATA, the mint, and the relevant treasury authority bump. All numeric fields, such as deposited amount, current liquidity, and timestamps, are set to zero so the protocol starts from a clean slate. This gives the program a single, canonical record for tracking each LP’s future deposits and withdrawals
 
+<img width="1001" height="309" alt="image" src="https://github.com/user-attachments/assets/7b605bf6-f03b-4c81-964a-eca6297283bf" />
 
+  
 </details>
 
 </details>
@@ -124,11 +95,9 @@ All numeric fields such as deposited amount, current liquidity, and timestamps a
 
 <details>
 <summary>Liquidity Withdraw</summary>
-The liquidity withdraw instruction enables removal of a specified amount of liquidity from a liquidity pool. It accepts inputs including the liquidity position identifier, the amount of liquidity tokens to withdraw, and the recipient account for receiving the withdrawn assets. The instruction verifies the user's entitlement to the liquidity and ensures sufficient available balance for withdrawal. It then burns the corresponding liquidity tokens and calculates the proportional underlying assets (such as tokens or coins) to be returned. After these calculations, the underlying assets are securely transferred to the recipient account. This instruction updates the pool’s internal state on-chain to reflect the reduction in liquidity and token supply, ensuring accurate accounting.
-
+This instruction lets a liquidity provider withdraw part or all of a previously deposited position from the pool. It verifies the provider’s position record, checks that the requested amount is available, and then reduces that position by the specified amount. The program computes the provider’s share of treasury funds and transfers the corresponding tokens from the treasury account back to the recipient account. Finally, it updates treasury and pool state to reflect the reduced liquidity and keep accounting consistent.
+  
 <img width="1454" height="193" alt="image" src="https://github.com/user-attachments/assets/86d2b43a-beeb-4e1f-8299-e3b42df09bc5" />
-
-
 
 </details>
 
@@ -144,6 +113,15 @@ The liquidity withdraw instruction enables removal of a specified amount of liqu
 * Modular and scalable design
 
 ---
+
+## Interest and Risk Model
+
+SolEase maintains a shared treasury that funds all loans. The protocol tracks treasury utilization to adjust interest rates dynamically:
+
+- When utilization is below 80% of total funds, loans use a **base interest rate of 5%**. (as of now)
+- When utilization reaches or exceeds **80%**, the interest rate for new or updated loans jumps to **25%**. (as of now)
+
+This jump in interest rate makes borrowing significantly more expensive when the treasury is stressed, encouraging borrowers to repay and helping refill the treasury. The current implementation uses simple interest based on principal, rate, and time elapsed; the design can later be extended to more advanced curves.
 
 ## System Architecture
 
@@ -161,13 +139,14 @@ Program Derived Addresses (PDAs) are used to guarantee secure and deterministic 
 
 ### Off-Chain Interface
 
-The front-end interface is built with React and TypeScript, providing smooth interaction with the blockchain via:
+The current version is operated via CLI and program clients (Anchor tests or custom scripts). A future React + TypeScript frontend is planned to wrap these instructions in a user-friendly interface using:
 
-* @solana/web3.js
-* Anchor client libraries
-* Solana Wallet Adapter
+- `@solana/web3.js`
+- Anchor client libraries
+- Solana Wallet Adapter
 
-Supported wallets include Phantom, Solflare, and Backpack, ensuring accessibility for a wide range of users.
+This UI will allow users to connect wallets such as Phantom, Solflare, and Backpack and interact with the protocol without writing code.
+
 
 ---
 
@@ -224,13 +203,20 @@ npm start
 
 ---
 
-## Usage Flow
+## Usage Flow (Program Level)
 
-1. Connect your wallet
-2. Deposit tokens as liquidity or lock collateral
-3. Borrow assets within allowed LTV ratio
-4. Repay borrowed funds with interest
-5. Withdraw funds at any time
+1. Initialize the global treasury and configuration accounts.
+2. For liquidity providers:
+   - Initialize LP state.
+   - Deposit liquidity into the treasury.
+   - Optionally withdraw liquidity later.
+3. For borrowers:
+   - Initialize a loan pool (per-user PDA).
+   - Deposit collateral into the vault.
+   - Borrow against collateral, subject to LTV and utilization-based interest.
+   - Repay principal + interest.
+   - Withdraw collateral once the loan is cleared.
+
 
 ---
 
@@ -246,11 +232,12 @@ npm start
 
 ## Future Enhancements
 
-* Implementation of compound interest algorithms
-* Advanced risk assessment model
-* DAO-based governance integration
-* Real-time analytics dashboard
-* Automated liquidation bots
+- Implementation of compound interest and more advanced utilization-based rate curves
+- Time- and health-based automated collateral liquidation
+- DAO-based governance for updating risk parameters and treasury configuration
+- Real-time analytics dashboard and explorer for protocol state
+- Automated liquidation bots and keepers
+
 
 ---
 
