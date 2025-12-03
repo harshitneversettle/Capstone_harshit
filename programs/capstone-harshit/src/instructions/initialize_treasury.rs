@@ -22,17 +22,25 @@ pub struct InitializeTreasury<'info> {
     #[account(mut)]
     pub admin : Signer<'info> ,     // pub key of the developer , as this is initialized only 
 
+    #[account(
+        mut ,
+        seeds = [b"treasury-authority"],
+        bump 
+    )] 
+    /// CHECK: PDA authority, no data stored
+    pub treasury_authority: UncheckedAccount<'info>,
 
     #[account(
         init,
         payer = admin,
         token::mint = liquidity_mint,
-        token::authority = treasury_state
+        token::authority = treasury_authority
     )]
     pub treasury_vault : Account<'info , TokenAccount> ,     // ATA for treasurypda 
 
     /// CHECK: WSOL native mint (do NOT deserialize as Mint!)
     pub liquidity_mint: UncheckedAccount<'info>,
+    
     pub system_program: Program<'info, System>,
     pub associated_token_program: Program<'info, AssociatedToken>,
     pub token_program: Program<'info, Token>,
@@ -50,6 +58,7 @@ pub fn handler(ctx : Context<InitializeTreasury>)->Result<()>{
     treasury.bump = ctx.bumps.treasury_state ;
     treasury.interest_rate = 0 ;
     treasury.total_interest_gained = 0 ;
+    treasury.treasury_authority_bump = ctx.bumps.treasury_authority ;
 
     msg!("Treasury initialized successfully ");
     Ok(())

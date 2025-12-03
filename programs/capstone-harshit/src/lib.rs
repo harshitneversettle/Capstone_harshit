@@ -40,5 +40,11 @@ pub mod capstone_harshit {
     pub fn repay_loan(ctx : Context<RepayLoan>)->Result<()>{
         instructions::repay_loan::handler(ctx)
     }
+
+    pub fn liquidity_withdraw(ctx : Context<LiquidityWithdraw> , amount_deposited : u64 )->Result<()>{
+        instructions::liquidity_withdraw::handler(ctx , amount_deposited)
+    }
+
+    
 }
 

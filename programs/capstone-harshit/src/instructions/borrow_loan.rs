@@ -31,8 +31,8 @@ use pyth_sdk_solana::load_price_feed_from_account_info;
 
         /// CHECK: PDA authority for treasury vault 
         #[account(
-            seeds = [b"treasury"] ,  
-            bump = treasury_state.bump
+            seeds = [b"treasury-authority"] ,  
+            bump = treasury_state.treasury_authority_bump 
         )]
         pub treasury_authority : UncheckedAccount<'info> ,
 
@@ -59,8 +59,8 @@ use pyth_sdk_solana::load_price_feed_from_account_info;
     
         let amount: u64 = max_borrow as u64;
 
-        let bump = treasury.bump;
-        let seeds: &[&[u8]] = &[b"treasury", &[bump]];
+        let bump = treasury.treasury_authority_bump;
+        let seeds: &[&[u8]] = &[b"treasury-authority", &[bump]];
         let signer_seeds = &[&seeds[..]];
 
         let transfer_accounts = Transfer{

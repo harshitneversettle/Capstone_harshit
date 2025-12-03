@@ -3,7 +3,7 @@ use anchor_spl::{
     associated_token::AssociatedToken, token::{self, Mint, Token, TokenAccount}
 };
 use anchor_spl::token::Transfer;
-use crate::states::{UserTreasury, treasury_state};
+use crate::states::{LiquidatorState, UserTreasury, treasury_state};
 use crate::states::TreasuryState;
 
 
@@ -16,6 +16,19 @@ pub struct UserDeposit<'info>{
         bump = treasury_state.bump
     )]
     pub treasury_state : Account<'info , TreasuryState> ,
+
+    #[account(mut)]
+    pub user : Signer<'info> , 
+
+    #[account(mut)]
+    pub owner : Signer<'info> , 
+
+    #[account(
+        mut ,
+        seeds = [b"Liquidator-state" , owner.key().as_ref()] ,
+        bump ,
+    )]
+    pub lp_state : Account<'info , LiquidatorState> ,
 
     #[account(
         init_if_needed,
@@ -33,8 +46,7 @@ pub struct UserDeposit<'info>{
     )]
     pub treasury_authority: UncheckedAccount<'info>,
 
-    #[account(mut)]
-    pub user : Signer<'info> , 
+    
 
     #[account(mut)]
     pub user_ata: Account<'info, TokenAccount>,
@@ -57,6 +69,7 @@ pub struct UserDeposit<'info>{
 pub fn handler(ctx : Context<UserDeposit> , amount : u64)->Result<()> {
     let user = &mut ctx.accounts.user_treasury ;
     let treasury = &mut ctx.accounts.treasury_state ;
+    let lp_state = &mut ctx.accounts.lp_state ;
 
     user.user = ctx.accounts.user.key() ;
     user.treasury = treasury.key();
@@ -76,7 +89,7 @@ pub fn handler(ctx : Context<UserDeposit> , amount : u64)->Result<()> {
     token::transfer(cpi_context, amount)?;
 
     treasury.total_liquidity = treasury.total_liquidity.checked_add(amount).expect("overflow") ;
-
+    lp_state.liquidity_amount = amount ; 
     msg!(
         "User {} deposited {} tokens successfully!",
         user.user,

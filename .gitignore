@@ -47,7 +47,7 @@ defi-ui/.next/
 defi-ui/out/
 defi-ui/dist/
 defi-ui/build/
-
+defi-ui
 # -----------------------------
 # Keys / sensitive JSON
 # -----------------------------

@@ -11,5 +11,6 @@ pub struct TreasuryState{
     pub royality_rate : u16 ,
     pub interest_rate : u64 ,
     pub bump : u8 ,
+    pub treasury_authority_bump : u8 ,
     pub total_interest_gained : u128 
 }   

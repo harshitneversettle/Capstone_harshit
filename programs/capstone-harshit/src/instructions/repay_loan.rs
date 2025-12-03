@@ -56,10 +56,6 @@ pub struct RepayLoan<'info>{
     )]
     pub user_collateral_ata: Account<'info, TokenAccount>,
 
-
-
-
-
     #[account(
         mut ,
         constraint = treasury_ata.key() == treasury_state.treasury_ata ,

@@ -1,5 +1,6 @@
 use anchor_lang::accounts::unchecked_account;
 use anchor_lang::prelude::*;
+use anchor_lang::solana_program::native_token::LAMPORTS_PER_SOL;
 use anchor_spl::token::{Mint, Token, TokenAccount}; 
 use anchor_spl::associated_token::AssociatedToken;
 use crate::states::{LiquidatorState, PoolState};
@@ -25,6 +26,14 @@ pub struct InitializeLpState<'info> {
   )]  
   pub lp_ata : Account<'info , TokenAccount> ,
 
+  #[account(
+        mut ,
+        seeds = [b"treasury-authority"],
+        bump
+    )]
+    /// CHECK: PDA authority, no data stored
+    pub treasury_authority: UncheckedAccount<'info>,
+
   #[account(mut)]
   pub owner : Signer<'info> ,
 
@@ -40,13 +49,13 @@ pub fn handler(ctx: Context<InitializeLpState>)->Result<()>{
     let lp_state = &mut ctx.accounts.lp_state ;
 
     lp_state.owner = ctx.accounts.owner.key() ;
-    lp_state.amount = 0 ;
     lp_state.liquidity_mint = ctx.accounts.liquidity_mint.key() ;
     lp_state.liquidity_amount = 0 ;
     lp_state.lp_ata = ctx.accounts.lp_ata.key() ;
     lp_state.bump = ctx.bumps.lp_state ;
-    lp_state.last_update_time = 0 ;
-    lp_state.deposit_time = 0 ;
+    lp_state.last_update_time = Clock::get()?.unix_timestamp ;
+    lp_state.deposit_time = Clock::get()?.unix_timestamp ;
+    lp_state.treasury_authority_bump = ctx.bumps.treasury_authority ;
     msg!(" lp state initialized for user: {}", lp_state.owner);
     Ok(())
 }
