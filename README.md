@@ -119,6 +119,19 @@ All numeric fields such as deposited amount, current liquidity, and timestamps a
 
 </details>
 
+</details>
+
+
+<details>
+<summary>Liquidity Withdraw</summary>
+The liquidity withdraw instruction enables removal of a specified amount of liquidity from a liquidity pool. It accepts inputs including the liquidity position identifier, the amount of liquidity tokens to withdraw, and the recipient account for receiving the withdrawn assets. The instruction verifies the user's entitlement to the liquidity and ensures sufficient available balance for withdrawal. It then burns the corresponding liquidity tokens and calculates the proportional underlying assets (such as tokens or coins) to be returned. After these calculations, the underlying assets are securely transferred to the recipient account. This instruction updates the pool’s internal state on-chain to reflect the reduction in liquidity and token supply, ensuring accurate accounting.
+
+<img width="1454" height="193" alt="image" src="https://github.com/user-attachments/assets/86d2b43a-beeb-4e1f-8299-e3b42df09bc5" />
+
+
+
+</details>
+
 
 
 ## Key Features
