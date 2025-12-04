@@ -1,5 +1,5 @@
-solana airdrop 1000 9iV2QXoXHxEFsed2MVJed3RyHeZfP9ha2FBF4hZEe7Uh
-solana airdrop 1000 8rH2Ry6FemTELsouLXAwSRbckSsGuPaNVwohHvREwXmi
+solana airdrop 1000 7zJKWL1qBYYExf23hRrcojrWVZJcpEg4tSQNFmqJJFm9
+solana airdrop 1000 mwcfgyGrw3N36bEVMZFJzWQkidk2hLjGAZmf2m91QWC
 
 
 spl-token create-account 3LktYvnLKFFS9rjdG3qDRB4fV9sJFooRkKxVcJK7GFLg --owner FRUSb9M6YwKtWEVnqy83smBWbhGccbw14HmN83XDz6Bm \

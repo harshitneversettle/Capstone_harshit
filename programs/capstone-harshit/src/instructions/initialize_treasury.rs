@@ -36,7 +36,7 @@ pub struct InitializeTreasury<'info> {
         token::mint = liquidity_mint,
         token::authority = treasury_authority
     )]
-    pub treasury_vault : Account<'info , TokenAccount> ,     // ATA for treasurypda 
+    pub treasury_vault: Account<'info, TokenAccount> ,   // ATA for treasurypda 
 
     /// CHECK: WSOL native mint (do NOT deserialize as Mint!)
     pub liquidity_mint: UncheckedAccount<'info>,
