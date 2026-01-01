@@ -5,6 +5,7 @@ use anchor_spl::{
 use anchor_spl::token::Transfer;
 use crate::states::{LiquidatorState, UserTreasury, treasury_state};
 use crate::states::TreasuryState;
+use crate::errors::ErrorCode ;
 
 
 #[derive(Accounts)]

@@ -2,12 +2,18 @@ use anchor_lang::prelude::*;
 use anchor_spl::token::{self, Mint, Token, TokenAccount, Transfer, accessor::amount};
 use anchor_spl::associated_token::AssociatedToken;
 use crate::states::PoolState;
+use crate::errors::ErrorCode ;
 
 
 #[derive(Accounts)]
 
 pub struct DepositCollateral<'info>{
-    #[account(mut)]
+    #[account(
+        mut,
+        seeds = [b"user-pool", owner.key().as_ref()],
+        bump = pool_state.bump,
+        constraint = pool_state.owner == owner.key() @ ErrorCode::Unauthorized
+    )]
     pub pool_state: Account<'info, PoolState>,
 
     #[account(
@@ -19,7 +25,7 @@ pub struct DepositCollateral<'info>{
 
 
     #[account(
-        constraint = collateral_mint.key() == pool_state.collateral_mint
+        constraint = collateral_mint.key() == pool_state.collateral_mint @ ErrorCode::InvalidMint
     )]
     pub collateral_mint: Account<'info, Mint>,
 

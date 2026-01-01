@@ -5,6 +5,7 @@ use anchor_spl::{
 };
 
 use crate::states::TreasuryState;
+use crate::errors::ErrorCode ;
 
 #[derive(Accounts)]
 

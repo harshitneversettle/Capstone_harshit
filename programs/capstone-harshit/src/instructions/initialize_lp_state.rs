@@ -4,6 +4,7 @@ use anchor_lang::solana_program::native_token::LAMPORTS_PER_SOL;
 use anchor_spl::token::{Mint, Token, TokenAccount}; 
 use anchor_spl::associated_token::AssociatedToken;
 use crate::states::{LiquidatorState, PoolState};
+use crate::errors::ErrorCode ;
 
   
 #[derive(Accounts)]

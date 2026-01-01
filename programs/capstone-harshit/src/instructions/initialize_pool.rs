@@ -2,6 +2,7 @@ use anchor_lang::prelude::*;
 use anchor_spl::token::{Mint, Token, TokenAccount}; 
 use anchor_spl::associated_token::AssociatedToken;
 use crate::states::PoolState;
+use crate::errors::ErrorCode ;
 
 
 #[derive(Accounts)]

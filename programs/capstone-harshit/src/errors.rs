@@ -1,15 +1,17 @@
 use anchor_lang::prelude::*;
 
-
 #[error_code]
 pub enum ErrorCode {
-    #[msg("Insufficient funds")]
-    InsufficientFunds,
-    
-    #[msg("Liquidity pool is empty")]
-    LiquidityEmpty,
-
-    
-    #[msg("You must pay your existing loan first before borrowing again.")]
-    PayLoanFirst, 
+    #[msg("Unauthorized access")]
+    Unauthorized,
+    #[msg("Invalid price feed")]
+    InvalidPrice,
+    #[msg("Math overflow")]
+    MathOverflow,
+    #[msg("Insufficient liquidity")]
+    InsufficientLiquidity,
+    #[msg("Invalid mint")]
+    InvalidMint,
+    #[msg("Account not initialized")]
+    NotInitialized,
 }

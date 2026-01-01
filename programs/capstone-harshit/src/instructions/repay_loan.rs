@@ -3,6 +3,7 @@ use anchor_lang::solana_program::native_token::LAMPORTS_PER_SOL;
 use anchor_spl::token::{self, Mint, Token, TokenAccount, Transfer};
 use anchor_spl::associated_token::AssociatedToken;
 use crate::states::{PoolState, TreasuryState};
+use crate::errors::ErrorCode ;
 
 
 
@@ -15,8 +16,8 @@ pub struct RepayLoan<'info>{
     pub treasury_state : Account<'info , TreasuryState> ,
 
     #[account(
-        mut , 
-        constraint = pool_state.owner == owner.key() ,
+        mut,
+        constraint = pool_state.owner == owner.key() @ ErrorCode::Unauthorized 
     )]
     pub pool_state : Account<'info , PoolState> ,
 

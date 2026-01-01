@@ -4,8 +4,10 @@ declare_id!("CjPe2KvPS1zrjudwdtWbUN9bxYnKaz96g9QiqSd8zPed");
 
 pub mod instructions;
 pub mod states;
+pub mod errors;
 
 use instructions::*;
+use errors::* ;
 
 #[program]
 pub mod capstone_harshit {

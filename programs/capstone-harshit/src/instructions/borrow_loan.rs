@@ -1,45 +1,55 @@
-    use anchor_lang::prelude::*;
-    use anchor_lang::solana_program::native_token::LAMPORTS_PER_SOL;
-    use anchor_spl::token::{self, Mint, Token, TokenAccount, Transfer, accessor::amount};
-    use anchor_spl::associated_token::AssociatedToken;
-    use crate::states::{PoolState, TreasuryState};
-    use pyth_solana_receiver_sdk::price_update::{PriceUpdateV2};
-    use pyth_solana_receiver_sdk::price_update::get_feed_id_from_hex;
+use anchor_lang::prelude::*;
+use anchor_lang::solana_program::native_token::LAMPORTS_PER_SOL;
+use anchor_spl::token::{self, Mint, Token, TokenAccount, Transfer, accessor::amount};
+use anchor_spl::associated_token::AssociatedToken;
+use crate::states::{PoolState, TreasuryState};
+use pyth_solana_receiver_sdk::price_update::{PriceUpdateV2};
+use pyth_solana_receiver_sdk::price_update::get_feed_id_from_hex;
 use pyth_sdk_solana::load_price_feed_from_account_info;
+use crate::errors::ErrorCode ;
 
 
 
 
-    #[derive(Accounts)] 
-    pub struct BorrowLoan<'info>{
+#[derive(Accounts)] 
+pub struct BorrowLoan<'info>{
 
-        #[account(mut)]
-        pub pool_state : Account<'info , PoolState> ,
+    #[account(constraint = owner.key() == pool_state.owner @ ErrorCode::Unauthorized)]
+    pub owner : Signer<'info> ,
 
-        #[account(mut)]
-        pub treasury_state : Account<'info , TreasuryState> ,
+    #[account(
+        mut,
+        has_one = owner @ ErrorCode::Unauthorized,
+        constraint = pool_state.collateral_amount > 0 @ ErrorCode::NotInitialized
+    )]
+    pub pool_state : Account<'info , PoolState> ,
+
+    #[account(
+        mut
+    )]
+    pub treasury_state : Account<'info , TreasuryState> ,
         
-        pub loan_mint : Account<'info , Mint> ,
+    pub loan_mint : Account<'info , Mint> ,
 
-        #[account(mut)] 
-        pub user_loan_ata : Account<'info , TokenAccount> ,
+    #[account(mut, constraint = user_loan_ata.mint == loan_mint.key())]
+    pub user_loan_ata : Account<'info , TokenAccount> ,
 
-        pub owner : Signer<'info> ,
 
-        #[account(mut)]
-        pub treasury_ata: Account<'info , TokenAccount> ,
 
-        /// CHECK: PDA authority for treasury vault 
-        #[account(
-            seeds = [b"treasury-authority"] ,  
-            bump = treasury_state.treasury_authority_bump 
-        )]
-        pub treasury_authority : UncheckedAccount<'info> ,
+    #[account(mut, constraint = treasury_ata.key() == treasury_state.treasury_ata)]
+    pub treasury_ata: Account<'info , TokenAccount> ,
 
-        pub token_program: Program<'info, Token>,
-        pub system_program: Program<'info, System>,
-        pub associated_token_program: Program<'info, AssociatedToken>,
-    }
+    /// CHECK: PDA authority for treasury vault 
+    #[account(
+        seeds = [b"treasury-authority"] ,  
+        bump = treasury_state.treasury_authority_bump 
+    )]
+    pub treasury_authority : UncheckedAccount<'info> ,
+
+    pub token_program: Program<'info, Token>,
+    pub system_program: Program<'info, System>,
+    pub associated_token_program: Program<'info, AssociatedToken>,
+}
 
 
     pub fn handler(ctx : Context<BorrowLoan>)->Result<()>{
@@ -58,6 +68,9 @@ use pyth_sdk_solana::load_price_feed_from_account_info;
             as u64;
     
         let amount: u64 = max_borrow as u64;
+
+         require!(treasury.total_liquidity >= treasury.total_borrowed.saturating_add(amount), 
+             ErrorCode::InsufficientLiquidity);
 
         let bump = treasury.treasury_authority_bump;
         let seeds: &[&[u8]] = &[b"treasury-authority", &[bump]];
