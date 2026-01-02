@@ -47,10 +47,10 @@ pub struct DepositCollateral<'info>{
     pub token_program: Program<'info, Token>,
     pub associated_token_program: Program<'info, AssociatedToken>,
     pub system_program: Program<'info, System>,
-}
+} 
 
 
-pub fn handler(ctx: Context<DepositCollateral> , amount : u64  ) -> Result<()>{
+pub fn handler(ctx: Context<DepositCollateral> , amount : u64  ) -> Result<()>{  // amount is in raw units 
     let pool = &mut ctx.accounts.pool_state ;
 
     let transfer_accounts = Transfer{
