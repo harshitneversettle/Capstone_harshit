@@ -49,7 +49,6 @@ pub struct DepositCollateral<'info>{
     pub system_program: Program<'info, System>,
 } 
 
-
 pub fn handler(ctx: Context<DepositCollateral> , amount : u64  ) -> Result<()>{  // amount is in raw units 
     let pool = &mut ctx.accounts.pool_state ;
 
