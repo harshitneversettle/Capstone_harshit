@@ -56,6 +56,7 @@ pub fn handler(ctx: Context<InitializePool>)->Result<()>{
     pool.interest_rate = 500 ;     // 5%
     pool.last_update_time = 0 ;
     pool.ltv = 50 ;
+    pool.is_active = true ;
     msg!(" Personal pool initialized for user: {}", pool.owner);
     Ok(())
 }

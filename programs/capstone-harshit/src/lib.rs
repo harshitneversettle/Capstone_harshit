@@ -47,6 +47,10 @@ pub mod capstone_harshit {
         instructions::liquidity_withdraw::handler(ctx , amount_deposited)
     }
 
+    pub fn liquidate_collateral(ctx : Context<LiquidateCollateral> )->Result<()>{
+        instructions::liquidate_collateral::handler(ctx) 
+    }
+
     
 }
 

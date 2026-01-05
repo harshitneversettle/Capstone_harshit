@@ -16,4 +16,5 @@ pub struct PoolState {
   pub vault_authority_bump: u8,
   pub borrow_amount : u64 ,
   pub borrow_time : i64 ,
+  pub is_active : bool ,
 }

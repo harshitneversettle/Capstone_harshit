@@ -6,6 +6,7 @@ pub mod user_treasury;
 pub mod repay_loan;
 pub mod liquidity_withdraw;
 pub mod initialize_lp_state;
+pub mod liquidate_collateral;
 
 
 pub use initialize_pool::*;
@@ -16,3 +17,4 @@ pub use user_treasury::*;
 pub use repay_loan::*;
 pub use liquidity_withdraw::*;
 pub use initialize_lp_state::*;
+pub use liquidate_collateral::*;

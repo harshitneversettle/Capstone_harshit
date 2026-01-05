@@ -30,7 +30,6 @@ pub struct RepayLoan<'info>{
     )]
     pub user_loan_ata: Account<'info, TokenAccount>,
 
-    
 
     #[account(
         mut ,
@@ -149,7 +148,7 @@ pub fn handler(ctx : Context<RepayLoan>)->Result<()>{
             treasury.interest_rate = 2500 ;
         }
 
-    
+        pool.is_active = false ;
     Ok(()) 
 
 }
@@ -169,8 +168,6 @@ pub fn calculate_interest(amount_borrowed : u64 , interest : u64 , current_time 
         .expect("mul overflow")
         .checked_div(SECONDS_PER_YEAR as u128)
         .expect("div overflow");
-
-
    
     Ok(amount_after_interest as u64) 
 }

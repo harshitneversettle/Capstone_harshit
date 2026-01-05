@@ -32,8 +32,8 @@ pub struct InitializeLpState<'info> {
         seeds = [b"treasury-authority"],
         bump
     )]
-    /// CHECK: PDA authority, no data stored
-    pub treasury_authority: UncheckedAccount<'info>,
+  /// CHECK: PDA authority, no data stored
+  pub treasury_authority: UncheckedAccount<'info>,
 
   #[account(mut)]
   pub owner : Signer<'info> ,
